@@ -1,0 +1,85 @@
+services:
+
+  # ============================================
+  # 💰 MATCHING SERVICE
+  # ============================================
+  matching-service:
+    build: .
+    expose:
+      - "8080"
+    restart: always
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_TOPIC_ORDER_ACCEPTED=order.accepted
+      - KAFKA_TOPIC_ORDER_MATCHED=order.matched
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=matching-service-group
+    depends_on:
+      - kafka
+    networks:
+      - brokerx-network
+
+
+  kafka:
+    image: confluentinc/cp-kafka:8.1.0
+    container_name: kafka
+    ports:
+      - "9092:9092" # Port pour les clients externes
+      - "9093:9093" # Port pour le contrôleur interne
+    environment:
+      # Identifiant unique du nœud (obligatoire en mode KRaft)
+      KAFKA_NODE_ID: 1
+
+      # Rôles du nœud : ici broker ET controller (possible car 1 seul nœud)
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      # Ports et protocoles d’écoute
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # Où stocker les métadonnées KRaft
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+      # Configuration du quorum de contrôleurs (un seul ici)
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      # Annonce du broker pour les clients
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      # Facteurs de réplication et ISRs pour un cluster à 1 nœud
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+
+      # Autoriser la création automatique de topics
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+      # ID du cluster KRaft (UUID arbitraire, fixe ou généré une seule fois)
+      CLUSTER_ID: "q1w2e3r4t5y6u7i8o9p0zxcvbnmasd"
+
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - brokerx-network
+    restart: always
+
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+# ============================================
+# 🌐 NETWORKS
+# ============================================
+
+networks:
+  brokerx-network:
+    external: true
+    name: brokerx-network
+
+volumes:
+  kafka_data:
+    name: kafka_data
