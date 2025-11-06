@@ -1,5 +1,7 @@
 package com.brokerx.matching_service.application.port.out;
 
+import java.math.BigDecimal;
+
 import com.brokerx.matching_service.domain.model.Match;
 
 /**
@@ -20,7 +22,7 @@ public interface MatchEventPort {
             Long sellOrderId,
             String stockSymbol,
             Integer quantity,
-            java.math.BigDecimal executionPrice
+            BigDecimal executionPrice
     ) {
         public static MatchEventData from(Match match) {
             return new MatchEventData(

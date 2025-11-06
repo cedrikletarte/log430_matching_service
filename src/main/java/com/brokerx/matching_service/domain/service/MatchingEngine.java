@@ -81,7 +81,13 @@ public class MatchingEngine {
                 int matchQty = Math.min(incomingOrder.getRemainingQuantity(), 
                                        restingOrder.getRemainingQuantity());
 
-                // Create match at resting order's price (price-time priority)
+                // Determine execution price: always use the SELL price (lower price benefits both)
+                // If incoming is SELL, use its price; if incoming is BUY, use resting SELL price
+                BigDecimal executionPrice = incomingOrder.getSide() == OrderSide.SELL
+                        ? incomingOrder.getLimitPrice()  // SELL is incoming, use its price
+                        : restingOrder.getLimitPrice();   // BUY is incoming, use resting SELL price
+
+                // Create match
                 Match match = Match.builder()
                         .buyOrderId(incomingOrder.getSide() == OrderSide.BUY 
                                 ? incomingOrder.getOrderId() 
@@ -91,7 +97,7 @@ public class MatchingEngine {
                                 : restingOrder.getOrderId())
                         .stockSymbol(incomingOrder.getStockSymbol())
                         .quantity(matchQty)
-                        .executionPrice(restingOrder.getLimitPrice())
+                        .executionPrice(executionPrice)
                         .build();
 
                 matches.add(match);

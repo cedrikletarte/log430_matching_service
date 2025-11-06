@@ -22,9 +22,9 @@ services:
   kafka:
     image: confluentinc/cp-kafka:8.1.0
     container_name: kafka
-    ports:
-      - "9092:9092" # Port pour les clients externes
-      - "9093:9093" # Port pour le contrôleur interne
+    expose:
+      - "9092"
+      - "9093"
     environment:
       # Identifiant unique du nœud (obligatoire en mode KRaft)
       KAFKA_NODE_ID: 1
@@ -71,6 +71,32 @@ services:
       retries: 5
       start_period: 40s
 
+  matching-postgres:
+    image: postgres:17
+    container_name: matching-postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      POSTGRES_DB: postgres
+    expose:
+      - "5432"
+    volumes:
+      - matching_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command:
+      - "postgres"
+      # Connexions
+      - "-c"
+      - "max_connections=150"
+    networks:
+      - brokerx-network
+
 # ============================================
 # 🌐 NETWORKS
 # ============================================
@@ -83,3 +109,5 @@ networks:
 volumes:
   kafka_data:
     name: kafka_data
+  matching_postgres_data:
+    name: matching_postgres_data
