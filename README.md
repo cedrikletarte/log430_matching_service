@@ -196,3 +196,8 @@ Les endpoints d'ordre/portefeuille/marché peuvent être déclarés "publics" au
 - Pas de routage / 404:
 	- Vérifier que `gateway-service` est `healthy` et que les labels Traefik sont bien appliqués
 	- Vérifier que tous les services partagent le réseau `brokerx-network`
+
+### Infrastructure model
+![Infrastructure main model](.infragenie/infrastructure_main_model.svg)
+
+---
