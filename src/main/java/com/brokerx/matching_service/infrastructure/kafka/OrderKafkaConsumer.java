@@ -1,6 +1,7 @@
 package com.brokerx.matching_service.infrastructure.kafka;
 
-import com.brokerx.matching_service.application.port.in.MatchOrderUseCase;
+import com.brokerx.matching_service.application.port.in.command.ProcessOrderCommand;
+import com.brokerx.matching_service.application.port.in.useCase.MatchOrderUseCase;
 import com.brokerx.matching_service.infrastructure.kafka.dto.OrderAcceptedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class OrderKafkaConsumer {
 
         try {
             // Convert event to command and process
-            MatchOrderUseCase.ProcessOrderCommand command = new MatchOrderUseCase.ProcessOrderCommand(
+            ProcessOrderCommand command = new ProcessOrderCommand(
                     event.orderId(),
                     event.stockSymbol(),
                     event.side(),

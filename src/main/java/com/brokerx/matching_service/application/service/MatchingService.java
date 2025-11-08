@@ -1,6 +1,7 @@
 package com.brokerx.matching_service.application.service;
 
-import com.brokerx.matching_service.application.port.in.MatchOrderUseCase;
+import com.brokerx.matching_service.application.port.in.command.ProcessOrderCommand;
+import com.brokerx.matching_service.application.port.in.useCase.MatchOrderUseCase;
 import com.brokerx.matching_service.application.port.out.MatchEventPort;
 import com.brokerx.matching_service.application.port.out.OutboxPort;
 import com.brokerx.matching_service.application.port.out.SagaPort;
