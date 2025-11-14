@@ -43,7 +43,7 @@ public class OutboxPublisherService {
         
         pendingEvents.forEach(event -> {
             try {
-                // DDeserialize the payload
+                // Deserialize the payload
                 MatchEventPort.MatchEventData eventData = objectMapper.readValue(
                         event.getPayload(), 
                         MatchEventPort.MatchEventData.class

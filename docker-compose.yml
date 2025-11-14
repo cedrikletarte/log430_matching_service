@@ -5,14 +5,15 @@ services:
   # ============================================
   matching-service:
     build: .
+    container_name: matching-service
     expose:
       - "8080"
     restart: always
     environment:
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - KAFKA_TOPIC_ORDER_ACCEPTED=order.accepted
-      - KAFKA_TOPIC_ORDER_MATCHED=order.matched
-      - SPRING_KAFKA_CONSUMER_GROUP_ID=matching-service-group
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092 # adresse du broker Kafka
+      - KAFKA_TOPIC_ORDER_ACCEPTED=order.accepted # topic des ordres acceptés
+      - KAFKA_TOPIC_ORDER_MATCHED=order.matched # topic des ordres appariés
+      - SPRING_KAFKA_CONSUMER_GROUP_ID=matching-service-group # groupe de consommateurs Kafka
     depends_on:
       - kafka
     networks:
@@ -30,6 +31,8 @@ services:
       KAFKA_NODE_ID: 1
 
       # Rôles du nœud : ici broker ET controller (possible car 1 seul nœud)
+      # Broker : gère les topics et les messages
+      # Controller : gère le cluster Kafka (élections, etc.)
       KAFKA_PROCESS_ROLES: broker,controller
 
       # Ports et protocoles d’écoute
@@ -37,16 +40,13 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
 
-      # Où stocker les métadonnées KRaft
-      KAFKA_LOG_DIRS: /var/lib/kafka/data
-
       # Configuration du quorum de contrôleurs (un seul ici)
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
 
       # Annonce du broker pour les clients
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
 
-      # Facteurs de réplication et ISRs pour un cluster à 1 nœud
+      # Réplication minimale pour les topics internes (offsets, transactions)
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -75,11 +75,10 @@ services:
     image: postgres:17
     container_name: matching-postgres
     restart: always
-    shm_size: 128mb
     environment:
       POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
       POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: ${SPRING_DATASOURCE_DB}
     expose:
       - "5432"
     volumes:
@@ -89,11 +88,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    command:
-      - "postgres"
-      # Connexions
-      - "-c"
-      - "max_connections=150"
     networks:
       - brokerx-network
 
