@@ -22,12 +22,9 @@ public class MatchingEngine {
     private final Map<String, Map<OrderSide, TreeMap<BigDecimal, Queue<OrderBookEntry>>>> orderBooks = 
         new ConcurrentHashMap<>();
 
-    /**
-     * Add an order to the book and attempt to match it
-     * @return List of matches that occurred
-     */
+    /* Add an order to the book and attempt to match it */
     public List<Match> addOrder(OrderBookEntry order) {
-        log.info("📥 Adding order to book: {} {} {} @ {} qty={}",
+        log.info("Adding order to book: {} {} {} @ {} qty={}",
                 order.getOrderId(), order.getSide(), order.getStockSymbol(), 
                 order.getLimitPrice(), order.getQuantity());
 
@@ -40,18 +37,15 @@ public class MatchingEngine {
         // If order has remaining quantity, add to book
         if (order.getRemainingQuantity() > 0) {
             addToBook(order);
-            log.info("📖 Order {} added to book with remaining qty={}", 
+            log.info("Order {} added to book with remaining qty={}", 
                     order.getOrderId(), order.getRemainingQuantity());
         } else {
-            log.info("✅ Order {} fully matched", order.getOrderId());
+            log.info("Order {} fully matched", order.getOrderId());
         }
-
         return matches;
     }
 
-    /**
-     * Try to match an order against the opposite side of the book
-     */
+    /* Try to match an order against the opposite side of the book */
     private List<Match> tryMatch(OrderBookEntry incomingOrder, OrderSide oppositeSide) {
         List<Match> matches = new ArrayList<>();
         
@@ -102,7 +96,7 @@ public class MatchingEngine {
 
                 matches.add(match);
 
-                log.info("🎯 MATCH: Buy #{} Sell #{} {} shares @ {} of {}",
+                log.info("MATCH: Buy #{} Sell #{} {} shares @ {} of {}",
                         match.getBuyOrderId(), match.getSellOrderId(),
                         match.getQuantity(), match.getExecutionPrice(), match.getStockSymbol());
 
@@ -113,7 +107,7 @@ public class MatchingEngine {
                 // Remove resting order if fully filled
                 if (restingOrder.getRemainingQuantity() == 0) {
                     ordersAtPrice.poll();
-                    log.info("✅ Resting order {} fully filled, removed from book", 
+                    log.info("Resting order {} fully filled, removed from book", 
                             restingOrder.getOrderId());
                 }
             }
@@ -127,9 +121,7 @@ public class MatchingEngine {
         return matches;
     }
 
-    /**
-     * Add order to the book
-     */
+    /* Add order to the book */
     private void addToBook(OrderBookEntry order) {
         TreeMap<BigDecimal, Queue<OrderBookEntry>> priceMap = getOrderBook(
                 order.getStockSymbol(), order.getSide());
@@ -138,9 +130,7 @@ public class MatchingEngine {
                 .add(order);
     }
 
-    /**
-     * Get or create order book for a symbol and side
-     */
+    /* Get or create order book for a symbol and side */
     private TreeMap<BigDecimal, Queue<OrderBookEntry>> getOrderBook(String symbol, OrderSide side) {
         orderBooks.putIfAbsent(symbol, new ConcurrentHashMap<>());
         
@@ -157,15 +147,13 @@ public class MatchingEngine {
         return symbolBook.get(side);
     }
 
-    /**
-     * Cancel an order from the book
-     */
+    /* Cancel an order from the book */
     public boolean cancelOrder(Long orderId, String symbol, OrderSide side) {
         TreeMap<BigDecimal, Queue<OrderBookEntry>> priceMap = getOrderBook(symbol, side);
         
         for (Queue<OrderBookEntry> queue : priceMap.values()) {
             if (queue.removeIf(entry -> entry.getOrderId().equals(orderId))) {
-                log.info("❌ Order {} cancelled from book", orderId);
+                log.info("Order {} cancelled from book", orderId);
                 return true;
             }
         }

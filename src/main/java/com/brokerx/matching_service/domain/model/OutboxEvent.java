@@ -18,10 +18,10 @@ import java.time.Instant;
 public class OutboxEvent {
     
     private Long id;
-    private String aggregateType;  // "MATCH", "ORDER_BOOK"
-    private String aggregateId;    // matchId, orderId
-    private String eventType;      // "ORDER_MATCHED", "MATCH_FAILED"
-    private String payload;        // JSON payload
+    private String aggregateType;
+    private String aggregateId;
+    private String eventType;
+    private String payload;
     private OutboxStatus status;
     private Instant createdAt;
     private Instant publishedAt;
@@ -29,22 +29,18 @@ public class OutboxEvent {
     private String errorMessage;
     
     public enum OutboxStatus {
-        PENDING,    // Waiting for publication
-        PUBLISHED,  // Published successfully
-        FAILED      // Definitive failure after several attempts
+        PENDING,
+        PUBLISHED,
+        FAILED
     }
     
-    /**
-     * Mark the event as published
-     */
+    /* Mark the event as published */
     public void markAsPublished() {
         this.status = OutboxStatus.PUBLISHED;
         this.publishedAt = Instant.now();
     }
     
-    /**
-     * Increment the retry counter
-     */
+    /* Increment the retry counter */
     public void incrementRetry(String error) {
         this.retryCount = (this.retryCount == null ? 0 : this.retryCount) + 1;
         this.errorMessage = error;
@@ -55,9 +51,7 @@ public class OutboxEvent {
         }
     }
     
-    /**
-     * Check if the event can be retried
-     */
+    /* Check if the event can be retried */
     public boolean canRetry() {
         return this.status == OutboxStatus.PENDING && 
                (this.retryCount == null || this.retryCount < 5);

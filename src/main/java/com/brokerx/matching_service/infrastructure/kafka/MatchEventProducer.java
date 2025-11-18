@@ -1,6 +1,7 @@
 package com.brokerx.matching_service.infrastructure.kafka;
 
 import com.brokerx.matching_service.application.port.out.MatchEventPort;
+import com.brokerx.matching_service.domain.model.event.MatchEventData;
 import com.brokerx.matching_service.infrastructure.kafka.dto.OrderMatchedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class MatchEventProducer implements MatchEventPort {
     
     private final KafkaTemplate<String, OrderMatchedEvent> kafkaTemplate;
 
+    /* Publish an OrderMatched event */
     @Override
     public void publishMatchEvent(MatchEventData eventData) {
         OrderMatchedEvent event = new OrderMatchedEvent(
@@ -34,10 +36,10 @@ public class MatchEventProducer implements MatchEventPort {
 
         try {
             kafkaTemplate.send(orderMatchedTopic, eventData.stockSymbol(), event);
-            log.info("📤 Published OrderMatched event to topic {}: buyOrder={}, sellOrder={}, qty={} @ {}",
+            log.info("Published OrderMatched event to topic {}: buyOrder={}, sellOrder={}, qty={} @ {}",
                     orderMatchedTopic, event.buyOrderId(), event.sellOrderId(), event.quantity(), event.executionPrice());
         } catch (Exception e) {
-            log.error("❌ Failed to publish OrderMatched event: {}", e.getMessage(), e);
+            log.error("Failed to publish OrderMatched event: {}", e.getMessage(), e);
         }
     }
 }

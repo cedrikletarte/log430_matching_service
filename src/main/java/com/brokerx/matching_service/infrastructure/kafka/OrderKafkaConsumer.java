@@ -19,9 +19,10 @@ public class OrderKafkaConsumer {
 
     private final MatchOrderUseCase matchOrderUseCase;
 
+    /* Handle OrderAccepted events */
     @KafkaListener(topics = "${kafka.topic.order-accepted}", groupId = "${spring.kafka.consumer.group-id}")
     public void handleOrderAccepted(OrderAcceptedEvent event) {
-        log.info("📥 Received OrderAccepted event: orderId={}, symbol={}, side={}, price={}, qty={}",
+        log.info("Received OrderAccepted event: orderId={}, symbol={}, side={}, price={}, qty={}",
                 event.orderId(), event.stockSymbol(), event.side(), event.limitPrice(), event.quantity());
 
         try {
@@ -36,9 +37,9 @@ public class OrderKafkaConsumer {
 
             matchOrderUseCase.processOrder(command);
             
-            log.info("✅ Order {} processed successfully", event.orderId());
+            log.info("Order {} processed successfully", event.orderId());
         } catch (Exception e) {
-            log.error("❌ Failed to process OrderAccepted event for order {}: {}", 
+            log.error("Failed to process OrderAccepted event for order {}: {}", 
                     event.orderId(), e.getMessage(), e);
         }
     }

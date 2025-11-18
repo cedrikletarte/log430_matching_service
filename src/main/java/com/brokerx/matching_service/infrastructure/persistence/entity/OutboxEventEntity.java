@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-/**
- * JPA Entity for Outbox Pattern
- * Infrastructure layer - persistence concern
- */
+/* JPA Entity for Outbox Pattern */
 @Entity
 @Table(name = "outbox_events", indexes = {
     @Index(name = "idx_outbox_status", columnList = "status"),

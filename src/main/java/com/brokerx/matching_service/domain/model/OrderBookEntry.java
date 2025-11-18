@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * Domain model representing an entry in the order book
- */
+/* Domain model representing an entry in the order book */
 @Data
 @Builder
 @NoArgsConstructor

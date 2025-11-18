@@ -1,10 +1,10 @@
-package com.brokerx.matching_service.infrastructure.persistence.adapter;
+package com.brokerx.matching_service.infrastructure.persistence.repository.outbox;
 
 import com.brokerx.matching_service.application.port.out.OutboxPort;
 import com.brokerx.matching_service.domain.model.OutboxEvent;
 import com.brokerx.matching_service.infrastructure.persistence.entity.OutboxEventEntity;
 import com.brokerx.matching_service.infrastructure.persistence.mapper.OutboxEventMapper;
-import com.brokerx.matching_service.infrastructure.persistence.repository.OutboxEventJpaRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,6 +26,7 @@ public class OutboxPersistenceAdapter implements OutboxPort {
     private final OutboxEventJpaRepository repository;
     private final OutboxEventMapper mapper;
     
+    /* Save an outbox event */
     @Override
     @Transactional
     public OutboxEvent save(OutboxEvent event) {
@@ -35,10 +36,11 @@ public class OutboxPersistenceAdapter implements OutboxPort {
         OutboxEventEntity entity = OutboxEventMapper.fromDomain(event);
         OutboxEventEntity saved = repository.save(entity);
         
-        log.info("✅ Outbox event saved: id={}, type={}", saved.getId(), saved.getEventType());
+        log.info("Outbox event saved: id={}, type={}", saved.getId(), saved.getEventType());
         return mapper.toDomain(saved);
     }
     
+    /* Find pending outbox events */
     @Override
     @Transactional(readOnly = true)
     public List<OutboxEvent> findPendingEvents() {
@@ -48,6 +50,7 @@ public class OutboxPersistenceAdapter implements OutboxPort {
                 .toList();
     }
     
+    /* Find outbox event by ID */
     @Override
     @Transactional(readOnly = true)
     public Optional<OutboxEvent> findById(Long id) {
@@ -55,6 +58,7 @@ public class OutboxPersistenceAdapter implements OutboxPort {
                 .map(mapper::toDomain);
     }
     
+    /* Mark an outbox event as published */
     @Override
     @Transactional
     public void markAsPublished(Long eventId) {
@@ -62,10 +66,11 @@ public class OutboxPersistenceAdapter implements OutboxPort {
             entity.setStatus(OutboxEvent.OutboxStatus.PUBLISHED);
             entity.setPublishedAt(Instant.now());
             repository.save(entity);
-            log.info("✅ Outbox event marked as published: id={}", eventId);
+            log.info("Outbox event marked as published: id={}", eventId);
         });
     }
     
+    /* Increment retry count for an outbox event */
     @Override
     @Transactional
     public void incrementRetry(Long eventId, String error) {
@@ -76,7 +81,7 @@ public class OutboxPersistenceAdapter implements OutboxPort {
             // If retries exceed 5, mark as FAILED
             if (entity.getRetryCount() >= 5) {
                 entity.setStatus(OutboxEvent.OutboxStatus.FAILED);
-                log.warn("⚠️ Outbox event marked as FAILED after {} retries: id={}", 
+                log.warn("Outbox event marked as FAILED after {} retries: id={}", 
                         entity.getRetryCount(), eventId);
             }
             
@@ -84,10 +89,11 @@ public class OutboxPersistenceAdapter implements OutboxPort {
         });
     }
     
+    /* Delete published outbox events before a cutoff time */
     @Override
     @Transactional
     public void deletePublishedEventsBefore(Instant cutoff) {
         repository.deletePublishedEventsBefore(cutoff);
-        log.info("🧹 Cleaned up published outbox events before {}", cutoff);
+        log.info("Cleaned up published outbox events before {}", cutoff);
     }
 }

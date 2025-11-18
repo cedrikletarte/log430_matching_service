@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * Domain model representing a matched trade
- */
+/* Domain model representing a matched trade */
 @Data
 @Builder
 @NoArgsConstructor

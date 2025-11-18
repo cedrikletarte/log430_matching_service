@@ -8,9 +8,7 @@ import com.brokerx.matching_service.infrastructure.persistence.entity.OutboxEven
 @Component
 public class OutboxEventMapper {
     
-    /**
-     * Convert to domain model
-     */
+    /* Convert to domain model */
     public OutboxEvent toDomain(OutboxEventEntity entity) {
         return OutboxEvent.builder()
                 .id(entity.getId())
@@ -26,9 +24,7 @@ public class OutboxEventMapper {
                 .build();
     }
     
-    /**
-     * Create from domain model
-     */
+    /* Create from domain model */
     public static OutboxEventEntity fromDomain(OutboxEvent domain) {
         return OutboxEventEntity.builder()
                 .id(domain.getId())
