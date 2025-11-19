@@ -14,10 +14,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Adapter for Outbox Pattern persistence
- * Implements the OutboxPort (hexagonal architecture)
- */
+/* Adapter for Outbox Pattern persistence */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -87,13 +84,5 @@ public class OutboxPersistenceAdapter implements OutboxPort {
             
             repository.save(entity);
         });
-    }
-    
-    /* Delete published outbox events before a cutoff time */
-    @Override
-    @Transactional
-    public void deletePublishedEventsBefore(Instant cutoff) {
-        repository.deletePublishedEventsBefore(cutoff);
-        log.info("Cleaned up published outbox events before {}", cutoff);
     }
 }

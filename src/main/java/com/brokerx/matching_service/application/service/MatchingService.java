@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +27,7 @@ public class MatchingService implements MatchOrderUseCase {
     private final MatchingEngine matchingEngine;
     private final OutboxPort outboxPort;
     private final ObjectMapper objectMapper;
+    private final OutboxPublisherService outboxPublisherService;
 
     /* Process a new order and attempt matching */
     @Override
@@ -58,6 +61,16 @@ public class MatchingService implements MatchOrderUseCase {
             });
             
             log.info("Successfully processed {} match(es) for order {}", matches.size(), command.orderId());
+            
+            // 4. Trigger immediate publishing after transaction commit
+            TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        outboxPublisherService.publishImmediately();
+                    }
+                }
+            );
         } else {
             log.info("Order {} added to book (no immediate match)", command.orderId());
         }

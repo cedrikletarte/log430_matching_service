@@ -21,7 +21,4 @@ public interface OutboxPort {
     
     /* Increment the retry counter */
     void incrementRetry(Long eventId, String error);
-    
-    /* Delete published events older than X days (cleanup) */
-    void deletePublishedEventsBefore(java.time.Instant cutoff);
 }
