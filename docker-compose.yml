@@ -10,10 +10,8 @@ services:
       - "8080"
     restart: always
     environment:
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092 # adresse du broker Kafka
-      - KAFKA_TOPIC_ORDER_ACCEPTED=order.accepted # topic des ordres acceptés
-      - KAFKA_TOPIC_ORDER_MATCHED=order.matched # topic des ordres appariés
-      - SPRING_KAFKA_CONSUMER_GROUP_ID=matching-service-group # groupe de consommateurs Kafka
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
     depends_on:
       - kafka
     networks:
