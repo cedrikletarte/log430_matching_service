@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class OutboxPublisherService {
     }
     
     /* Publish a single outbox event */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected void publishEvent(OutboxEvent event) {
         try {
             // Deserialize the payload
@@ -48,11 +49,13 @@ public class OutboxPublisherService {
 
             // Publish to Kafka
             matchEventPort.publishMatchEvent(eventData);
+            log.info("Event published to Kafka successfully: id={}", event.getId());
 
             // Mark as published
+            log.info("Calling markAsPublished for event id={}", event.getId());
             outboxPort.markAsPublished(event.getId());
             
-            log.info("Published outbox event: id={}, type={}", event.getId(), event.getEventType());
+            log.info("✓ Complete: Published outbox event: id={}, type={}", event.getId(), event.getEventType());
             
         } catch (Exception e) {
             log.error("Failed to publish outbox event id={}: {}", event.getId(), e.getMessage());

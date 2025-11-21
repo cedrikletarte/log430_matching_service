@@ -8,6 +8,7 @@ import com.brokerx.matching_service.infrastructure.persistence.mapper.OutboxEven
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -57,14 +58,27 @@ public class OutboxPersistenceAdapter implements OutboxPort {
     
     /* Mark an outbox event as published */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markAsPublished(Long eventId) {
-        repository.findById(eventId).ifPresent(entity -> {
-            entity.setStatus(OutboxEvent.OutboxStatus.PUBLISHED);
-            entity.setPublishedAt(Instant.now());
-            repository.save(entity);
-            log.info("Outbox event marked as published: id={}", eventId);
-        });
+        log.info("Attempting to mark outbox event as PUBLISHED: id={}", eventId);
+        
+        Optional<OutboxEventEntity> optionalEntity = repository.findById(eventId);
+        
+        if (optionalEntity.isEmpty()) {
+            log.error("Failed to mark as published - Outbox event not found: id={}", eventId);
+            return;
+        }
+        
+        OutboxEventEntity entity = optionalEntity.get();
+        log.info("Found outbox event: id={}, currentStatus={}, eventType={}", 
+                eventId, entity.getStatus(), entity.getEventType());
+        
+        entity.setStatus(OutboxEvent.OutboxStatus.PUBLISHED);
+        entity.setPublishedAt(Instant.now());
+        OutboxEventEntity saved = repository.save(entity);
+        
+        log.info("✓ Outbox event successfully updated: id={}, oldStatus={}, newStatus={}, publishedAt={}", 
+                saved.getId(), "PENDING", saved.getStatus(), saved.getPublishedAt());
     }
     
     /* Increment retry count for an outbox event */
